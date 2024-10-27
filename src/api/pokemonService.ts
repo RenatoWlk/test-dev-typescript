@@ -36,7 +36,7 @@ function processPokemon(name: string, heightDm: number, weightHg: number): Pokem
         name: name,
         height: height,
         weight: weight,
-        bmi: bmi,
+        bmi: Number.parseFloat(bmi.toFixed(2)),
         category: category,
     }
 }
@@ -46,6 +46,15 @@ export async function getPokemons(): Promise<Pokemon[]> {
 
     try {
         const response = await axios.get(url)
+        let pokemons: Pokemon[] = []
+
+        for (const pokemonResult of response.data.results) {
+            const pokemonData = await axios.get(`https://pokeapi.co/api/v2/pokemon/${pokemonResult.name}`);
+            const pokemon = processPokemon(pokemonData.data.name, pokemonData.data.height, pokemonData.data.weight);
+            pokemons.push(pokemon)
+        }
+
+        return pokemons;
     } catch (error) {
         console.log(`Erro na requisição dos Pokémons: ${error}`)
         throw new Error("Erro na requisição dos Pokémons")
@@ -53,13 +62,13 @@ export async function getPokemons(): Promise<Pokemon[]> {
 }
 
 export async function getPokemonsByName(name: string): Promise<Pokemon> {
-    const url = `https://pokeapi.co/api/v2/pokemon/${name.toLowerCase()}`
+    const url = `https://pokeapi.co/api/v2/pokemon/${name}`
 
     try {
         const response = await axios.get(url)
         return processPokemon(response.data.name, response.data.height, response.data.weight)
     } catch (error) {
         console.log(`Erro na requisição do Pokémon ${name}: ${error}`)
-        throw new Error(`Erro na requisição do Pokémon ${name}`)
+        throw new Error(`Erro na requisição do Pokémon ${name}: Pokémon não encontrado`)
     }
 }
